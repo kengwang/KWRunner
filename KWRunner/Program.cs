@@ -34,14 +34,20 @@ namespace KWRunner
             string jarpath = "NaN";
             string version = "NaN";
             string serverdir = "NaN";
+            string port = "NaN";
+            string world = "NaN";
+            string player = "NaN";
             for (int i = 0; i < argc; i++)
             {
                 if (args[i] == "--user") user = args[++i];
                 if (args[i] == "--jar") jarpath = args[++i];
                 if (args[i] == "--version") version = args[++i];
                 if (args[i] == "--serverdir") serverdir = args[++i];
+                if (args[i] == "--port") port = args[++i];
+                if (args[i] == "--world") world = args[++i];
+                if (args[i] == "--player") player = args[++i];
             }
-            if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN")
+            if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN" || port=="NaN" || world=="NaN" || player=="NaN")
             {
                 Console.WriteLine("Args not Completed!");
                 Environment.Exit(-4);
@@ -66,6 +72,19 @@ namespace KWRunner
                     Console.WriteLine("Permission All Given");
                 }
             }
+            Console.WriteLine("Configuring Server Properties");
+            string[] lines= File.ReadAllLines(serverdir+ "\\server.properties");
+            int l = lines.Length;
+            for (int i = 0; i < l; i++)
+            {
+                if (lines[i].Contains("server-port=")) lines[i] = "server-port=" + port;
+                if (lines[i].Contains("server-port =")) lines[i] = "server-port=" + port;
+                if (lines[i].Contains("server-portv6")) lines[i] = "server-portv6=random";
+                if (lines[i].Contains("level-name")) lines[i] = "level-name=" + world;
+                if (lines[i].Contains("max-players")) lines[i] = "max-players=" + player;
+            }
+            File.WriteAllLines(serverdir + "\\server.properties", lines);
+
             Console.WriteLine("Try to Start BDS at "+serverdir);
             Process process = new System.Diagnostics.Process();
             process.StartInfo.FileName = serverdir + "\\bedrock_server.exe";
