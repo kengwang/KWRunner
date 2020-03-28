@@ -61,19 +61,18 @@ namespace KWRunner
                 else
                 {
                     File.WriteAllText(serverdir + "\\DONOTMODIFY", version);
+                    Console.WriteLine("Give ServerDir Control Permission to the User, it may take few moument");
+                    UserControl.Commons.GiveUserPermission(serverdir, user);
+                    Console.WriteLine("Permission All Given");
                 }
             }
-            Console.WriteLine("Give ServerDir Control Permission to the User");
-            DirectoryInfo di = new DirectoryInfo(serverdir);
-            System.Security.AccessControl.DirectorySecurity dirSecurity = di.GetAccessControl();
-            dirSecurity.AddAccessRule(new FileSystemAccessRule(user, FileSystemRights.FullControl, AccessControlType.Allow));
-            di.SetAccessControl(dirSecurity);
-            Console.WriteLine("Try to Start BDS");
+            Console.WriteLine("Try to Start BDS at "+serverdir);
             Process process = new System.Diagnostics.Process();
             process.StartInfo.FileName = serverdir + "\\bedrock_server.exe";
             //process.StartInfo.Arguments = parameters;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.WorkingDirectory = serverdir;
             process.StartInfo.RedirectStandardInput = true;  // 重定向输入
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
@@ -95,13 +94,13 @@ namespace KWRunner
             //process.BeginErrorReadLine();
             while (!process.HasExited)
             {
-                process.StandardInput.WriteLine(Console.ReadLine());                
+                process.StandardInput.WriteLine(Console.ReadLine());
             }
         }
 
         private static void Process_Exit(object sender, EventArgs e)
         {
-            Console.WriteLine("BDS Exit with code "+ _process.ExitCode);
+            Console.WriteLine("BDS Exit with code " + _process.ExitCode);
             Environment.Exit(_process.ExitCode);
         }
 
