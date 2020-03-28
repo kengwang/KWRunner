@@ -5,6 +5,7 @@ using System.Text;
 using System.Configuration;
 using System.DirectoryServices.AccountManagement;
 using System.Collections;
+using System.Security.Principal;
 
 namespace UserControl
 {
@@ -12,8 +13,22 @@ namespace UserControl
     {
         static Configuration config;
         static AppSettingsSection appSetting;
+
+
+        public static bool IsAdministrator()
+        {
+            WindowsIdentity current = WindowsIdentity.GetCurrent();
+            WindowsPrincipal windowsPrincipal = new WindowsPrincipal(current);
+            return windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
         public static bool CreateLocalWindowsAccount(string userName, string passWord, string displayName, string description, string groupName, bool canChangePwd, bool pwdExpires)
         {
+            if (!IsAdministrator())
+            {
+                Console.WriteLine("You are not Administrator! Try to be Administator.");
+                return false;
+            }
             bool retIsSuccess = false;
             try
             {

@@ -158,7 +158,6 @@ namespace KWRunner
                 Console.WriteLine("申请内存空间失败！！");
                 return false;
             }
-            Console.WriteLine(GetLastError().ToString());
             UIntPtr bytesWritten;
 
             ok1 = WriteProcessMemory(procHandle, baseaddress, Encoding.Default.GetBytes(dllname), dlllength, out bytesWritten); //写内存
@@ -167,7 +166,6 @@ namespace KWRunner
                 Console.WriteLine("写内存失败！！" + GetLastError().ToString());
                 return false;
             }
-            Console.WriteLine(GetLastError().ToString());
             hack = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "LoadLibraryA"); //取得loadlibarary在kernek32.dll地址
 
             if (hack == IntPtr.Zero)
@@ -175,7 +173,6 @@ namespace KWRunner
                 Console.WriteLine("无法取得函数的入口点！！");
                 return false;
             }
-            Console.WriteLine(GetLastError().ToString());
             yan =CreateRemoteThread(procHandle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
             if (yan == IntPtr.Zero)
             {
@@ -185,7 +182,6 @@ namespace KWRunner
             }
             else
             {
-                Console.WriteLine(GetLastError().ToString());
                 Console.WriteLine("已成功注入dll!!");
                 return true;
             }
