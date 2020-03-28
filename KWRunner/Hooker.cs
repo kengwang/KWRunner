@@ -150,31 +150,33 @@ namespace KWRunner
             uint dlllength;
             dlllength = (uint)((dllname.Length + 1) * Marshal.SizeOf(typeof(char)));
 
-            baseaddress = VirtualAllocEx(name.Handle, IntPtr.Zero, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);   //申请内存空间
+            //IntPtr procHandle = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, name.Id);
+            IntPtr procHandle = name.Handle;
+            baseaddress = VirtualAllocEx(procHandle, IntPtr.Zero, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);   //申请内存空间
             if (baseaddress == IntPtr.Zero) //返回0则操作失败，下面都是
             {
                 Console.WriteLine("申请内存空间失败！！");
                 return false;
             }
+            Console.WriteLine(GetLastError().ToString());
             UIntPtr bytesWritten;
 
-            ok1 = WriteProcessMemory(name.Handle, baseaddress, Encoding.Default.GetBytes(dllname), dlllength, out bytesWritten); //写内存
+            ok1 = WriteProcessMemory(procHandle, baseaddress, Encoding.Default.GetBytes(dllname), dlllength, out bytesWritten); //写内存
             if (!ok1)
             {
                 Console.WriteLine("写内存失败！！" + GetLastError().ToString());
                 return false;
             }
-
-            hack = GetProcAddress(GetModuleHandleA("Kernel32"), "LoadLibraryW"); //取得loadlibarary在kernek32.dll地址
+            Console.WriteLine(GetLastError().ToString());
+            hack = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "LoadLibraryA"); //取得loadlibarary在kernek32.dll地址
 
             if (hack == IntPtr.Zero)
             {
                 Console.WriteLine("无法取得函数的入口点！！");
                 return false;
             }
-
-            yan=CreateRemoteThread(name.Handle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
-            GetLastError();
+            Console.WriteLine(GetLastError().ToString());
+            yan =CreateRemoteThread(procHandle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
             if (yan == IntPtr.Zero)
             {
                 //VirtualFreeEx(name.Handle, baseaddress, 0, 0x00008000);
@@ -183,6 +185,7 @@ namespace KWRunner
             }
             else
             {
+                Console.WriteLine(GetLastError().ToString());
                 Console.WriteLine("已成功注入dll!!");
                 return true;
             }
