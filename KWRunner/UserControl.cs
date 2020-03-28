@@ -6,7 +6,7 @@ using System.Configuration;
 using System.DirectoryServices.AccountManagement;
 using System.Collections;
 using System.Security.Principal;
-
+//C:\Users\yushi\Desktop\Run\KWRunner.exe --user mc5 --jar C:\Users\yushi\Desktop\ --version 1.14.32.1 --serverdir C:\Users\yushi\Desktop\server\
 namespace UserControl
 {
     public static class Commons
@@ -26,7 +26,7 @@ namespace UserControl
         {
             if (!IsAdministrator())
             {
-                Console.WriteLine("You are not Administrator! Try to be Administator.");
+                Console.WriteLine("You are not Administrator!");
                 return false;
             }
             bool retIsSuccess = false;
