@@ -46,6 +46,7 @@ namespace KWRunner
                 Console.WriteLine("Args not Completed!");
                 Environment.Exit(-4);
             }
+            Console.WriteLine("Checking For User Exist");
             Hooker.IsUserExist(user);
             string passwd = Hooker.GetValue("User", user);
             Console.WriteLine("Checking if first start");

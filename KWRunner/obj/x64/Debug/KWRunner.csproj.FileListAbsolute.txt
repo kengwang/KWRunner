@@ -1,0 +1,6 @@
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\x64\Debug\KWRunner.exe.config
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\x64\Debug\KWRunner.exe
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\x64\Debug\KWRunner.pdb
+D:\Workspace\KWRunner\KWRunner\KWRunner\obj\x64\Debug\KWRunner.csproj.CoreCompileInputs.cache
+D:\Workspace\KWRunner\KWRunner\KWRunner\obj\x64\Debug\KWRunner.exe
+D:\Workspace\KWRunner\KWRunner\KWRunner\obj\x64\Debug\KWRunner.pdb

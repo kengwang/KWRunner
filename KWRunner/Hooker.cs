@@ -1,5 +1,4 @@
-﻿using EasyHook;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,60 +17,43 @@ namespace KWRunner
         //Hooker引用
 
         /************ CheckUserExist ***********************/
-        [DllImport("Netapi32.dll")]
-        extern static int NetUserEnum(
-            [MarshalAs(UnmanagedType.LPWStr)] string servername,
-            int level,
-            int filter,
-            out IntPtr bufptr,
-            int prefmaxlen,
-            out int entriesread,
-            out int totalentries,
-            out int resume_handle);
-
-        [DllImport("Netapi32.dll")]
-
-        extern static int NetApiBufferFree(IntPtr Buffer);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct USER_INFO_0
-        {
-            public string Username;
-        }
 
         static public void IsUserExist(string username)
         {
-            int EntriesRead;
-            int TotalEntries;
-            int Resume;
-            IntPtr bufPtr;
-            NetUserEnum(null, 0, 2, out bufPtr, -1, out EntriesRead, out TotalEntries, out Resume);
-            if (EntriesRead > 0)
+
+            if (!isExistUserName(username))
             {
-                USER_INFO_0[] Users = new USER_INFO_0[EntriesRead];
-                IntPtr iter = bufPtr;
-                for (int i = 0; i < EntriesRead; i++)
+                //User Not Set
+                Console.WriteLine("User Not Exist, Creating User");
+                string passwd = GetRandomString(15, true, true, true, true, "");
+                if (UserControl.Commons.CreateLocalWindowsAccount(username, passwd, "MCS" + username, "The User of the BDS " + username, "mc", false, false))
                 {
-                    Users[i] = (USER_INFO_0)Marshal.PtrToStructure(iter,
-                        typeof(USER_INFO_0));
-                    iter = (IntPtr)((int)iter + Marshal.SizeOf(typeof(USER_INFO_0)));
-                    if (Users[i].Username == username) return;
+                    Console.WriteLine("Creating User Done, Your Unique Password is " + passwd);
+                    SetValue("User", username, passwd);
                 }
-                NetApiBufferFree(bufPtr);
+                else
+                {
+                    Console.WriteLine("Creating User Failed, Please Contact Sale");
+                    Environment.Exit(-5);
+                }
             }
-            //User Not Set
-            Console.WriteLine("User Not Exist, Creating User");
-            string passwd = GetRandomString(15, true, true, true, true, "");
-            if (UserControl.Commons.CreateLocalWindowsAccount(username, passwd, "MCS" + username, "The User of the BDS " + username, "mc", false, false))
-            {
-                Console.WriteLine("Creating User Done, Your Unique Password is " + passwd);
-                SetValue("User", username, passwd);
-            }
-            else
-            {
-                Console.WriteLine("Creating User Failed, Please Contact Sale");
-                Environment.Exit(-5);
-            }
+        }
+
+        private static bool isExistUserName(string username)
+        {
+            Process proc = new Process();
+            proc.StartInfo.CreateNoWindow = true;
+            proc.StartInfo.FileName = "cmd.exe";
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.RedirectStandardInput = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.Start();
+            proc.StandardInput.WriteLine("net user");
+            proc.StandardInput.WriteLine("exit");
+            string outStr = proc.StandardOutput.ReadToEnd();
+            proc.Close();
+            return outStr.Contains(username + " ");
         }
 
         [DllImport("kernel32")]
@@ -118,58 +100,92 @@ namespace KWRunner
 
 
         /******************* Hooker Start ***********************/
-        static String ChannelName = null;
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress,
+            uint dwSize, uint flAllocationType, uint flProtect);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out UIntPtr lpNumberOfBytesWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern int GetLastError();
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetModuleHandleA(string name);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr CreateRemoteThread(IntPtr hProcess,
+            IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
+        // privileges
+        const int PROCESS_CREATE_THREAD = 0x0002;
+        const int PROCESS_QUERY_INFORMATION = 0x0400;
+        const int PROCESS_VM_OPERATION = 0x0008;
+        const int PROCESS_VM_WRITE = 0x0020;
+        const int PROCESS_VM_READ = 0x0010;
+
+        // used for memory allocation
+        const uint MEM_COMMIT = 0x00001000;
+        const uint MEM_RESERVE = 0x00002000;
+        const uint PAGE_READWRITE = 4;
 
         public static bool Hook(Process name, string version)
         {
+            bool ok1;
+            //int ok2;
+            //int hwnd;
+            IntPtr baseaddress;
+            IntPtr hack;
+            IntPtr yan;
+
             string dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
-            try
+            uint dlllength;
+            dlllength = (uint)((dllname.Length + 1) * Marshal.SizeOf(typeof(char)));
+
+            baseaddress = VirtualAllocEx(name.Handle, IntPtr.Zero, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);   //申请内存空间
+            if (baseaddress == IntPtr.Zero) //返回0则操作失败，下面都是
             {
-                RemoteHooking.IpcCreateServer<FileMonInterface>(ref ChannelName, WellKnownObjectMode.SingleCall);
-                string injectionLibrary = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), dllname);
-                RemoteHooking.Inject(
-                            name.Id,
-                            injectionLibrary,
-                            injectionLibrary,
-                            string.Empty);
-                Console.WriteLine("Injected to process {0}", name.Id);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Inject Failed! " + e.Message);
+                Console.WriteLine("申请内存空间失败！！");
                 return false;
             }
-        }
-    }
+            UIntPtr bytesWritten;
 
-    [Serializable]
-    public class HookParameter
-    {
-        public string Msg { get; set; }
-        public int HostProcessId { get; set; }
-    }
-
-    public class FileMonInterface : MarshalByRefObject
-    {
-        public void IsInstalled(Int32 InClientPID)
-        {
-            Console.WriteLine("FileMon has been installed in target {0}.\r\n", InClientPID);
-        }
-
-        public void OnCreateFile(Int32 InClientPID, String[] InFileNames)
-        {
-            for (int i = 0; i < InFileNames.Length; i++)
+            ok1 = WriteProcessMemory(name.Handle, baseaddress, Encoding.Default.GetBytes(dllname), dlllength, out bytesWritten); //写内存
+            if (!ok1)
             {
-                Console.WriteLine(InFileNames[i]);
+                Console.WriteLine("写内存失败！！" + GetLastError().ToString());
+                return false;
             }
-        }
-        public void ReportException(Exception InInfo)
-        {
-            Console.WriteLine("The target process has reported" + " an error:\r\n" + InInfo.ToString());
-        }
-        public void Ping()
-        {
+
+            hack = GetProcAddress(GetModuleHandleA("Kernel32"), "LoadLibraryW"); //取得loadlibarary在kernek32.dll地址
+
+            if (hack == IntPtr.Zero)
+            {
+                Console.WriteLine("无法取得函数的入口点！！");
+                return false;
+            }
+
+            yan=CreateRemoteThread(name.Handle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
+            GetLastError();
+            if (yan == IntPtr.Zero)
+            {
+                //VirtualFreeEx(name.Handle, baseaddress, 0, 0x00008000);
+                Console.WriteLine("创建远程线程失败！！" + GetLastError().ToString());
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("已成功注入dll!!");
+                return true;
+            }
         }
     }
 }
