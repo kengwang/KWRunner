@@ -13,38 +13,6 @@ namespace KWRunner
         //C:\Users\yushi\Desktop\KWRunner.exe --user mc1 --jar C:\Users\yushi\Desktop\ --version 1.14.32.1 --serverdir C:\Users\yushi\Desktop\server\
         //Hooker引用
 
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr GetModuleHandle(string lpModuleName);
-
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress,
-            uint dwSize, uint flAllocationType, uint flProtect);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out UIntPtr lpNumberOfBytesWritten);
-
-        [DllImport("kernel32.dll")]
-        static extern IntPtr CreateRemoteThread(IntPtr hProcess,
-            IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-
-        // privileges
-        const int PROCESS_CREATE_THREAD = 0x0002;
-        const int PROCESS_QUERY_INFORMATION = 0x0400;
-        const int PROCESS_VM_OPERATION = 0x0008;
-        const int PROCESS_VM_WRITE = 0x0020;
-        const int PROCESS_VM_READ = 0x0010;
-
-        // used for memory allocation
-        const uint MEM_COMMIT = 0x00001000;
-        const uint MEM_RESERVE = 0x00002000;
-        const uint PAGE_READWRITE = 4;
-
         /************ CheckUserExist ***********************/
         [DllImport("Netapi32.dll")]
         extern static int NetUserEnum(
@@ -65,35 +33,6 @@ namespace KWRunner
         public struct USER_INFO_0
         {
             public string Username;
-        }
-
-        static public void Hook(Process targetProcess, string version)
-        {
-            IntPtr procHandle = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, targetProcess.Id);
-
-            // searching for the address of LoadLibraryA and storing it in a pointer
-            IntPtr loadLibraryAddr = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
-
-            // name of the dll we want to inject
-            string dllName = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
-
-            Console.WriteLine("Try to hook " + dllName);
-
-            // alocating some memory on the target process - enough to store the name of the dll
-            // and storing its address in a pointer
-            IntPtr allocMemAddress = VirtualAllocEx(procHandle, IntPtr.Zero, (uint)((dllName.Length + 1) * Marshal.SizeOf(typeof(char))), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
-            // writing the name of the dll there
-            UIntPtr bytesWritten;
-            if (!WriteProcessMemory(procHandle, allocMemAddress, Encoding.Default.GetBytes(dllName), (uint)((dllName.Length + 1) * Marshal.SizeOf(typeof(char))), out bytesWritten))
-            {
-                Console.WriteLine("Hook Failed Cannot write memory");
-            }
-            else
-            {
-                CreateRemoteThread(procHandle, IntPtr.Zero, 0, loadLibraryAddr, allocMemAddress, 0, IntPtr.Zero);
-                // creating a thread that will call LoadLibraryA with allocMemAddress as argument
-            }
         }
 
         static public void IsUserExist(string username)
@@ -172,5 +111,78 @@ namespace KWRunner
             }
             return s;
         }
+
+
+        /******************* Hooker Start ***********************/
+
+        const uint MEM_COMMIT = 0x00001000;
+        const uint MEM_RESERVE = 0x00002000;
+        const uint PAGE_READWRITE = 4;
+
+        [DllImport("kernel32.dll")] //声明API函数
+        public static extern int VirtualAllocEx(IntPtr hwnd, int lpaddress, int size, uint type, uint tect);
+
+        [DllImport("kernel32.dll")]
+        public static extern int WriteProcessMemory(IntPtr hwnd, int baseaddress, string buffer, int nsize, int filewriten);
+
+        [DllImport("kernel32.dll")]
+        public static extern int GetProcAddress(int hwnd, string lpname);
+
+        [DllImport("kernel32.dll")]
+        public static extern int GetModuleHandleA(string name);
+
+        [DllImport("kernel32.dll")]
+        public static extern int CreateRemoteThread(IntPtr hwnd, int attrib, int size, int address, int par, int flags, int threadid);
+
+        public static void Hook(Process name, string version)
+        {
+            int ok1;
+            //int ok2;
+            //int hwnd;
+            int baseaddress;
+            int hack;
+            int yan;
+            string dllname;
+
+            dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
+            int dlllength;
+            dlllength = dllname.Length + 1;
+            Console.WriteLine("Try to hook " + name.ProcessName.ToLower() + " From " + dllname);
+
+            baseaddress = VirtualAllocEx(name.Handle, 0, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); //申请内存空间
+            if (baseaddress == 0) //返回0则操作失败，下面都是
+            {
+                Console.WriteLine("Applying memory space failed");
+                Environment.Exit(-3);
+            }
+
+            if (WriteProcessMemory(name.Handle, baseaddress, dllname, dlllength, 0) == 0)
+            {
+                Console.WriteLine("Writing memory failed");
+                Environment.Exit(-3);
+            }
+
+            hack = GetProcAddress(GetModuleHandleA("Kernel32"), "LoadLibraryW"); //取得loadlibarary在kernek32.dll地址
+
+            if (hack == 0)
+            {
+                Console.WriteLine("Cannot Get Enterence of application!");
+                Environment.Exit(-3);
+            }
+
+            yan = CreateRemoteThread(name.Handle, 0, 0, hack, baseaddress, 0, 0); //创建远程线程。
+
+            if (yan == 0)
+            {
+                Console.WriteLine("Creating remote thread Faied!");
+                //Environment.Exit(-3);
+            }
+            else
+            {
+                Console.WriteLine("Hook Done!");
+            }
+        }
     }
+
 }
+
