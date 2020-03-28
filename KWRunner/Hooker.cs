@@ -1,10 +1,12 @@
-﻿using System;
+﻿using EasyHook;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -116,20 +118,21 @@ namespace KWRunner
 
 
         /******************* Hooker Start ***********************/
-
+        static String ChannelName = null;
 
         public static bool Hook(Process name, string version)
         {
             string dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
             try
             {
-                var parameter = new HookParameter
-                {
-                    Msg = "已经成功注入目标进程",
-                    HostProcessId = EasyHook.RemoteHooking.GetCurrentProcessId()
-                };
-                EasyHook.RemoteHooking.Inject(name.Id, EasyHook.InjectionOptions.DoNotRequireStrongName, dllname, dllname,string.Empty, parameter);
-                Console.WriteLine("Inject Done!");
+                RemoteHooking.IpcCreateServer<FileMonInterface>(ref ChannelName, WellKnownObjectMode.SingleCall);
+                string injectionLibrary = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), dllname);
+                RemoteHooking.Inject(
+                            name.Id,
+                            injectionLibrary,
+                            injectionLibrary,
+                            string.Empty);
+                Console.WriteLine("Injected to process {0}", name.Id);
                 return true;
             }
             catch (Exception e)
@@ -146,5 +149,33 @@ namespace KWRunner
         public string Msg { get; set; }
         public int HostProcessId { get; set; }
     }
+
+    public class FileMonInterface : MarshalByRefObject
+    {
+        public void IsInstalled(Int32 InClientPID)
+        {
+            Console.WriteLine("FileMon has been installed in target {0}.\r\n", InClientPID);
+        }
+
+        public void OnCreateFile(Int32 InClientPID, String[] InFileNames)
+        {
+            for (int i = 0; i < InFileNames.Length; i++)
+            {
+                Console.WriteLine(InFileNames[i]);
+            }
+        }
+        public void ReportException(Exception InInfo)
+        {
+            Console.WriteLine("The target process has reported" + " an error:\r\n" + InInfo.ToString());
+        }
+        public void Ping()
+        {
+        }
+    }
 }
+
+
+
+
+
 
