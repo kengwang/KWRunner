@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -115,74 +117,34 @@ namespace KWRunner
 
         /******************* Hooker Start ***********************/
 
-        const uint MEM_COMMIT = 0x00001000;
-        const uint MEM_RESERVE = 0x00002000;
-        const uint PAGE_READWRITE = 4;
 
-        [DllImport("kernel32.dll")] //声明API函数
-        public static extern int VirtualAllocEx(IntPtr hwnd, int lpaddress, int size, uint type, uint tect);
-
-        [DllImport("kernel32.dll")]
-        public static extern int WriteProcessMemory(IntPtr hwnd, int baseaddress, string buffer, int nsize, int filewriten);
-
-        [DllImport("kernel32.dll")]
-        public static extern int GetProcAddress(int hwnd, string lpname);
-
-        [DllImport("kernel32.dll")]
-        public static extern int GetModuleHandleA(string name);
-
-        [DllImport("kernel32.dll")]
-        public static extern int CreateRemoteThread(IntPtr hwnd, int attrib, int size, int address, int par, int flags, int threadid);
-
-        public static void Hook(Process name, string version)
+        public static bool Hook(Process name, string version)
         {
-            int ok1;
-            //int ok2;
-            //int hwnd;
-            int baseaddress;
-            int hack;
-            int yan;
-            string dllname;
-
-            dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
-            int dlllength;
-            dlllength = dllname.Length + 1;
-            Console.WriteLine("Try to hook " + name.ProcessName.ToLower() + " From " + dllname);
-
-            baseaddress = VirtualAllocEx(name.Handle, 0, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); //申请内存空间
-            if (baseaddress == 0) //返回0则操作失败，下面都是
+            string dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
+            try
             {
-                Console.WriteLine("Applying memory space failed");
-                Environment.Exit(-3);
+                var parameter = new HookParameter
+                {
+                    Msg = "已经成功注入目标进程",
+                    HostProcessId = EasyHook.RemoteHooking.GetCurrentProcessId()
+                };
+                EasyHook.RemoteHooking.Inject(name.Id, EasyHook.InjectionOptions.DoNotRequireStrongName, dllname, dllname,string.Empty, parameter);
+                Console.WriteLine("Inject Done!");
+                return true;
             }
-
-            if (WriteProcessMemory(name.Handle, baseaddress, dllname, dlllength, 0) == 0)
+            catch (Exception e)
             {
-                Console.WriteLine("Writing memory failed");
-                Environment.Exit(-3);
-            }
-
-            hack = GetProcAddress(GetModuleHandleA("Kernel32"), "LoadLibraryW"); //取得loadlibarary在kernek32.dll地址
-
-            if (hack == 0)
-            {
-                Console.WriteLine("Cannot Get Enterence of application!");
-                Environment.Exit(-3);
-            }
-
-            yan = CreateRemoteThread(name.Handle, 0, 0, hack, baseaddress, 0, 0); //创建远程线程。
-
-            if (yan == 0)
-            {
-                Console.WriteLine("Creating remote thread Faied!");
-                //Environment.Exit(-3);
-            }
-            else
-            {
-                Console.WriteLine("Hook Done!");
+                Console.WriteLine("Inject Failed! " + e.Message);
+                return false;
             }
         }
     }
 
+    [Serializable]
+    public class HookParameter
+    {
+        public string Msg { get; set; }
+        public int HostProcessId { get; set; }
+    }
 }
 

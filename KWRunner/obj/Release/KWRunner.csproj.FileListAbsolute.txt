@@ -4,3 +4,12 @@ D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\KWRunner.pdb
 D:\Workspace\KWRunner\KWRunner\KWRunner\obj\Release\KWRunner.csproj.CoreCompileInputs.cache
 D:\Workspace\KWRunner\KWRunner\KWRunner\obj\Release\KWRunner.exe
 D:\Workspace\KWRunner\KWRunner\KWRunner\obj\Release\KWRunner.pdb
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook32.dll
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook32Svc.exe
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook64.dll
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook64Svc.exe
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyLoad32.dll
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyLoad64.dll
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook.dll
+D:\Workspace\KWRunner\KWRunner\KWRunner\bin\Release\EasyHook.xml
+D:\Workspace\KWRunner\KWRunner\KWRunner\obj\Release\KWRunner.csproj.CopyComplete
