@@ -163,9 +163,29 @@ namespace KWRunner
                 }
                 process.BeginOutputReadLine();
                 //process.BeginErrorReadLine();
+                bool forcestop = false;
                 while (!process.HasExited)
                 {
-                    process.StandardInput.WriteLine(Console.ReadLine());
+                    string input = Console.ReadLine();
+                    if (input == "stop")
+                    {
+                        process.StandardInput.WriteLine("stop");
+                        
+                        if (forcestop)
+                        {
+                            process.Kill();
+                            Console.WriteLine("Force Killed BDS Server");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Send stop Again to force stop");
+                            forcestop = true;
+                        }
+                    }
+                    else
+                    {
+                        process.StandardInput.WriteLine(input);
+                    }
                 }
                 ///*             Uncomment in  Release Version
             }
