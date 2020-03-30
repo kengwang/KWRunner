@@ -28,93 +28,152 @@ namespace KWRunner
 
         static void Main(string[] args)
         {
-            //处理参数
-            int argc = args.Length;
-            string user = "NaN";
-            string jarpath = "NaN";
-            string version = "NaN";
-            string serverdir = "NaN";
-            string port = "NaN";
-            string world = "NaN";
-            string player = "NaN";
-            for (int i = 0; i < argc; i++)
+            try
             {
-                if (args[i] == "--user") user = args[++i];
-                if (args[i] == "--jar") jarpath = args[++i];
-                if (args[i] == "--version") version = args[++i];
-                if (args[i] == "--serverdir") serverdir = args[++i];
-                if (args[i] == "--port") port = args[++i];
-                if (args[i] == "--world") world = args[++i];
-                if (args[i] == "--player") player = args[++i];
-            }
-            if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN" || port=="NaN" || world=="NaN" || player=="NaN")
-            {
-                Console.WriteLine("Args not Completed!");
-                Environment.Exit(-4);
-            }
-            Console.WriteLine("Checking For User Exist");
-            Hooker.IsUserExist(user);
-            string passwd = Hooker.GetValue("User", user);
-            Console.WriteLine("Checking if first start");
-            if (!File.Exists(serverdir + "\\DONOTMODIFY") || File.ReadAllText(serverdir + "\\DONOTMODIFY") != version)
-            {
-                Console.WriteLine("Copying Required File, it may take few moument");
-                if (!CopyDirectory(jarpath + "\\BDS\\" + version + "\\", serverdir + "\\", true))
+                //处理参数
+                int argc = args.Length;
+                string user = "NaN";
+                string jarpath = "NaN";
+                string version = "NaN";
+                string serverdir = "NaN";
+                string port = "NaN";
+                string world = "NaN";
+                string player = "NaN";
+                string dll = "NaN";
+                bool nodll = false;
+                bool injecter = false;
+                for (int i = 0; i < argc; i++)
                 {
-                    Console.WriteLine("Copying Directory Failed, Please Contact Sales");
-                    Environment.Exit(-3);
+                    if (args[i] == "--user") user = args[++i];
+                    if (args[i] == "--jar") jarpath = args[++i];
+                    if (args[i] == "--version") version = args[++i];
+                    if (args[i] == "--serverdir") serverdir = args[++i];
+                    if (args[i] == "--port") port = args[++i];
+                    if (args[i] == "--world") world = args[++i];
+                    if (args[i] == "--player") player = args[++i];
+                    if (args[i] == "--nodll") nodll = true;
+                    if (args[i] == "--dll") dll = args[++i];
+                    if (args[i] == "--injecter") injecter = true;
                 }
+                if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN" || port == "NaN" || world == "NaN" || player == "NaN")
+                {
+                    Console.WriteLine("Args not Completed!");
+                    Environment.Exit(-4);
+                }
+                //serverdir += "\\";
+                Console.WriteLine("Welcome To Use KWRunner V1.0.0! Powered by Kengwang (github@kengwang)");
+                Console.WriteLine("Checking For User Exist");
+                Hooker.IsUserExist(user, jarpath);
+                string passwd = Hooker.GetValue("User", user, jarpath + "\\Password.ini");
+                Console.WriteLine("Checking if first start");
+                if (!File.Exists(serverdir + "\\DONOTMODIFY"))
+                {
+                    //Load serverproperties
+                    Console.WriteLine("Loading Default Server Properties");
+                    File.Copy(jarpath + "\\BDS\\def.properties", serverdir + "server.properties", true);
+                    File.WriteAllText(serverdir + "\\DONOTMODIFY", "0");
+                }
+
+                if (File.ReadAllText(serverdir + "\\DONOTMODIFY") != version)
+                {
+                    Console.WriteLine("Copying Required File, it may take few moument");
+                    if (!CopyDirectory(jarpath + "\\BDS\\" + version + "\\", serverdir + "\\", true))
+                    {
+                        Console.WriteLine("Copying Directory Failed, Please Contact Sales");
+                        Environment.Exit(-3);
+                    }
+                    else
+                    {
+                        File.WriteAllText(serverdir + "\\DONOTMODIFY", version);
+                        Console.WriteLine("Give ServerDir Control Permission to the User, it may take few moument");
+                        UserControl.Commons.GiveUserPermission(serverdir, user);
+                        Console.WriteLine("Permission All Given");
+                    }
+                }
+                if (!nodll)
+                {
+                    Console.WriteLine("Copying Plugin DLL");
+                    if (File.Exists(dll))
+                    {
+                        File.Copy(dll, serverdir + "\\Plugin.dll", true);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Cannot Find DLL, Please Contact Sale. It will run by Non-dll mode!");
+                    }
+                }
+                Console.WriteLine("Configuring Server Properties");
+                string[] lines = File.ReadAllLines(serverdir + "\\server.properties");
+                int l = lines.Length;
+                bool portset = false;
+                bool port6set = false;
+                for (int i = 0; i < l; i++)
+                {
+                    if (lines[i].Contains("server-port=")) if (!portset) { lines[i] = "server-port=" + port; portset = true; } else { lines[i] = ""; }
+                    if (lines[i].Contains("server-port =")) if (!portset) { lines[i] = "server-port=" + port; portset = true; } else { lines[i] = ""; }
+                    if (lines[i].Contains("server-portv6")) if (!port6set) { lines[i] = "server-portv6=" + int.Parse(port) + 1; port6set = true; } else { lines[i] = ""; }
+                    if (lines[i].Contains("level-name")) lines[i] = "level-name=" + world;
+                    if (lines[i].Contains("max-players")) lines[i] = "max-players=" + player;
+                }
+                if (!portset)
+                {
+                    lines = lines.Append("server-port=" + port).ToList().ToArray();
+                    //Console.WriteLine("Port to " + port);
+                }
+                if (!port6set)
+                {
+                    lines = lines.Append("server-portv6=" + (int.Parse(port) + 1).ToString()).ToList().ToArray();
+                    //Console.WriteLine("v6 to " + int.Parse(port) + 1);
+                }
+                File.WriteAllLines(serverdir + "server.properties", lines);
+
+                Console.WriteLine("Try to Start BDS at " + serverdir);
+                Process process = new System.Diagnostics.Process();
+                if (!injecter) process.StartInfo.FileName = serverdir + "bedrock_server.exe";
                 else
                 {
-                    File.WriteAllText(serverdir + "\\DONOTMODIFY", version);
-                    Console.WriteLine("Give ServerDir Control Permission to the User, it may take few moument");
-                    UserControl.Commons.GiveUserPermission(serverdir, user);
-                    Console.WriteLine("Permission All Given");
+                    Console.WriteLine("Using Third Party Injecter!");
+                    process.StartInfo.FileName = jarpath + "\\MCDllInject.exe";
+                    process.StartInfo.Arguments = serverdir + "bedrock_server.exe" + " " + serverdir;
                 }
-            }
-            Console.WriteLine("Configuring Server Properties");
-            string[] lines= File.ReadAllLines(serverdir+ "\\server.properties");
-            int l = lines.Length;
-            for (int i = 0; i < l; i++)
-            {
-                if (lines[i].Contains("server-port=")) lines[i] = "server-port=" + port;
-                if (lines[i].Contains("server-port =")) lines[i] = "server-port=" + port;
-                if (lines[i].Contains("server-portv6")) lines[i] = "server-portv6=random";
-                if (lines[i].Contains("level-name")) lines[i] = "level-name=" + world;
-                if (lines[i].Contains("max-players")) lines[i] = "max-players=" + player;
-            }
-            File.WriteAllLines(serverdir + "\\server.properties", lines);
 
-            Console.WriteLine("Try to Start BDS at "+serverdir);
-            Process process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = serverdir + "\\bedrock_server.exe";
-            //process.StartInfo.Arguments = parameters;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.WorkingDirectory = serverdir;
-            process.StartInfo.RedirectStandardInput = true;  // 重定向输入
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.UserName = user; //指定用户名
-            process.EnableRaisingEvents = true;                      // 启用Exited事件
-            process.Exited += new EventHandler(Process_Exit);   // 注册进程结束事件
-            process.OutputDataReceived += new DataReceivedEventHandler(processOutputDataReceived);
-            process.OutputDataReceived += new DataReceivedEventHandler(processErrorDataReceived);
-            SecureString password = new SecureString();   //SecureString，安全字符，必须是char类型
-            foreach (char c in Hooker.GetValue("User", user).ToCharArray())
-            {
-                password.AppendChar(c);
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = serverdir;
+                process.StartInfo.RedirectStandardInput = true;  // 重定向输入
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UserName = user; //指定用户名
+                process.EnableRaisingEvents = true;                      // 启用Exited事件
+                process.Exited += new EventHandler(Process_Exit);   // 注册进程结束事件
+                process.OutputDataReceived += new DataReceivedEventHandler(processOutputDataReceived);
+                process.OutputDataReceived += new DataReceivedEventHandler(processErrorDataReceived);
+                SecureString password = new SecureString();   //SecureString，安全字符，必须是char类型
+                foreach (char c in passwd.ToCharArray())
+                {
+                    password.AppendChar(c);
+                }
+                process.StartInfo.Password = password; //指定明码，必须是安全字符串
+                _process = process;
+                process.Start();
+                if (!nodll && !injecter)
+                {
+                    Console.WriteLine("Using Original Hooker");
+                    Hooker.Hook(process, serverdir + "\\Plugin.dll");
+                }
+                process.BeginOutputReadLine();
+                //process.BeginErrorReadLine();
+                while (!process.HasExited)
+                {
+                    process.StandardInput.WriteLine(Console.ReadLine());
+                }
+                ///*             Uncomment in  Release Version
             }
-            process.StartInfo.Password = password; //指定明码，必须是安全字符串
-            _process = process;
-            process.Start();
-            Hooker.Hook(process, version);
-            process.BeginOutputReadLine();
-            //process.BeginErrorReadLine();
-            while (!process.HasExited)
+            catch (Exception e)
             {
-                process.StandardInput.WriteLine(Console.ReadLine());
+                Console.WriteLine("KWRunner Looks Like A Crash");
             }
+            //*/
         }
 
         private static void Process_Exit(object sender, EventArgs e)
@@ -125,7 +184,20 @@ namespace KWRunner
 
         private static void processOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            Console.WriteLine(e.Data);
+            if (e.Data.Contains("rhymc"))
+            {
+                Console.WriteLine("BDSJSRunner Successfully Loaded!");
+            }
+            else if (e.Data.Contains("can't start server"))
+            {
+                Console.WriteLine("Cannot start BDS Server!");
+                _process.Kill();
+                //由于Precess_Exit会处理,就不管啦!
+            }
+            else
+            {
+                Console.WriteLine(e.Data);
+            }
         }
 
         private static void processErrorDataReceived(object sender, DataReceivedEventArgs e)

@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE dotfuscatorMap SYSTEM "http://www.preemptive.com/dotfuscator/dtd/dotfuscatorMap_v1.2.dtd">
+<dotfuscatorMap version="1.1">
+    <header>
+        <timestamp>2020-03-30T22:59:26</timestamp>
+        <product version="4.9.6005.29054" user="firefly " serial="124576-PRO-AC6AB7C5-7A50E312-F0BBEBCC-829D98D7">Dotfuscator Professional Edition</product>
+    </header>
+    <mapping>
+        <module>
+            <name>KWRunner.exe</name>
+            <type>
+                <name>KWRunner.Hooker</name>
+                <newname>ᜂ</newname>
+                <methodlist>
+                    <method>
+                        <signature>void()</signature>
+                        <name>.ctor</name>
+                    </method>
+                    <method>
+                        <signature>native int(native int, native int, unsigned int32, native int, native int, unsigned int32, native int)</signature>
+                        <name>CreateRemoteThread</name>
+                    </method>
+                    <method>
+                        <signature>int32()</signature>
+                        <name>GetLastError</name>
+                    </method>
+                    <method>
+                        <signature>native int(string)</signature>
+                        <name>GetModuleHandle</name>
+                    </method>
+                    <method>
+                        <signature>native int(string)</signature>
+                        <name>GetModuleHandleA</name>
+                    </method>
+                    <method>
+                        <signature>int32(string, string, string, System.Text.StringBuilder, int32, string)</signature>
+                        <name>GetPrivateProfileString</name>
+                    </method>
+                    <method>
+                        <signature>native int(native int, string)</signature>
+                        <name>GetProcAddress</name>
+                    </method>
+                    <method>
+                        <signature>string(int32, bool, bool, bool, bool, string)</signature>
+                        <name>GetRandomString</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>string(string, string, string)</signature>
+                        <name>GetValue</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>bool(System.Diagnostics.Process, string)</signature>
+                        <name>Hook</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>bool(string)</signature>
+                        <name>isExistUserName</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(string, string)</signature>
+                        <name>IsUserExist</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>native int(int32, bool, int32)</signature>
+                        <name>OpenProcess</name>
+                    </method>
+                    <method>
+                        <signature>void(string, string, string, string)</signature>
+                        <name>SetValue</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>native int(native int, native int, unsigned int32, unsigned int32, unsigned int32)</signature>
+                        <name>VirtualAllocEx</name>
+                    </method>
+                    <method>
+                        <signature>int64(string, string, string, string)</signature>
+                        <name>WritePrivateProfileString</name>
+                    </method>
+                    <method>
+                        <signature>bool(native int, native int, unsigned int8[], unsigned int32, native unsigned int&amp;)</signature>
+                        <name>WriteProcessMemory</name>
+                    </method>
+                </methodlist>
+                <fieldlist>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>MEM_COMMIT</name>
+                        <newname>ᜅ</newname>
+                    </field>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>MEM_RESERVE</name>
+                        <newname>ᜆ</newname>
+                    </field>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>PAGE_READWRITE</name>
+                        <newname>ᜇ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_CREATE_THREAD</name>
+                        <newname>ᜀ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_QUERY_INFORMATION</name>
+                        <newname>ᜁ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_OPERATION</name>
+                        <newname>ᜂ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_READ</name>
+                        <newname>ᜄ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_WRITE</name>
+                        <newname>ᜃ</newname>
+                    </field>
+                </fieldlist>
+                <propertylist />
+                <eventlist />
+            </type>
+            <type>
+                <name>KWRunner.Program</name>
+                <newname>ᜁ</newname>
+                <methodlist>
+                    <method>
+                        <signature>void()</signature>
+                        <name>.ctor</name>
+                    </method>
+                    <method>
+                        <signature>bool(string, string, bool)</signature>
+                        <name>CopyDirectory</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(string[])</signature>
+                        <name>Main</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(object, System.EventArgs)</signature>
+                        <name>Process_Exit</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(object, System.Diagnostics.DataReceivedEventArgs)</signature>
+                        <name>processErrorDataReceived</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(object, System.Diagnostics.DataReceivedEventArgs)</signature>
+                        <name>processOutputDataReceived</name>
+                        <newname>ᜁ</newname>
+                    </method>
+                </methodlist>
+                <fieldlist>
+                    <field>
+                        <signature>System.Diagnostics.Process</signature>
+                        <name>_process</name>
+                        <newname>ᜈ</newname>
+                    </field>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>MEM_COMMIT</name>
+                        <newname>ᜅ</newname>
+                    </field>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>MEM_RESERVE</name>
+                        <newname>ᜆ</newname>
+                    </field>
+                    <field>
+                        <signature>unsigned int32</signature>
+                        <name>PAGE_READWRITE</name>
+                        <newname>ᜇ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_CREATE_THREAD</name>
+                        <newname>ᜀ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_QUERY_INFORMATION</name>
+                        <newname>ᜁ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_OPERATION</name>
+                        <newname>ᜂ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_READ</name>
+                        <newname>ᜄ</newname>
+                    </field>
+                    <field>
+                        <signature>int32</signature>
+                        <name>PROCESS_VM_WRITE</name>
+                        <newname>ᜃ</newname>
+                    </field>
+                </fieldlist>
+                <propertylist />
+                <eventlist />
+            </type>
+            <type>
+                <name>UserControl.Commons</name>
+                <newname>ᜀ</newname>
+                <methodlist>
+                    <method>
+                        <signature>string(string, int32)</signature>
+                        <name>b</name>
+                    </method>
+                    <method>
+                        <signature>System.DirectoryServices.AccountManagement.GroupPrincipal(string, bool)</signature>
+                        <name>CreateGroup</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>bool(string, string, string, string, string, bool, bool)</signature>
+                        <name>CreateLocalWindowsAccount</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(string, string)</signature>
+                        <name>GiveUserPermission</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>bool()</signature>
+                        <name>IsAdministrator</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>System.DirectoryServices.AccountManagement.GroupPrincipal(string)</signature>
+                        <name>IsGroupExist</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>int32(string, System.Collections.Generic.List`1&lt;string&gt;)</signature>
+                        <name>UpdateGroupUsers</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                </methodlist>
+                <fieldlist />
+                <propertylist />
+                <eventlist />
+            </type>
+        </module>
+    </mapping>
+    <statistics>
+        <statisticline>
+            <description>Total Classes</description>
+            <statistic>3</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Methods</description>
+            <statistic>30</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Fields</description>
+            <statistic>17</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Properties</description>
+            <statistic>0</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Events</description>
+            <statistic>0</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Classes Renamed</description>
+            <statistic>3</statistic>
+            <statistic>100.00%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Methods Renamed</description>
+            <statistic>17</statistic>
+            <statistic>56.67%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Fields Renamed</description>
+            <statistic>17</statistic>
+            <statistic>100.00%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Properties Renamed</description>
+            <statistic>0</statistic>
+            <statistic>0.00%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Total Events Renamed</description>
+            <statistic>0</statistic>
+            <statistic>0.00%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Methods Renamed to 'ᜀ'</description>
+            <statistic>16</statistic>
+            <statistic>53.33%</statistic>
+        </statisticline>
+        <statisticline>
+            <description>Methods Renamed to 'ᜁ'</description>
+            <statistic>1</statistic>
+            <statistic>3.33%</statistic>
+        </statisticline>
+    </statistics>
+</dotfuscatorMap>

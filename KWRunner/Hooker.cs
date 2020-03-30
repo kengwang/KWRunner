@@ -13,12 +13,12 @@ namespace KWRunner
 {
     class Hooker
     {
-        //C:\Users\yushi\Desktop\KWRunner.exe --user mc1 --jar C:\Users\yushi\Desktop\ --version 1.14.32.1 --serverdir C:\Users\yushi\Desktop\server\
+        //C:\Users\yushi\Desktop\KWRunner.exe --user mc1 --jar C:\Users\yushi\Desktop\ --version 1.14.32.1 --serverdir C:\Users\yushi\Desktop\server\ --port 19132 --world world --player 100 --dll C:\Users\yushi\Desktop\BDSJSRunner.dll
         //Hooker引用
 
         /************ CheckUserExist ***********************/
 
-        static public void IsUserExist(string username)
+        static public void IsUserExist(string username, string jardir)
         {
 
             if (!isExistUserName(username))
@@ -29,7 +29,7 @@ namespace KWRunner
                 if (UserControl.Commons.CreateLocalWindowsAccount(username, passwd, "MCS" + username, "The User of the BDS " + username, "mc", false, false))
                 {
                     Console.WriteLine("Creating User Done, Your Unique Password is " + passwd);
-                    SetValue("User", username, passwd);
+                    SetValue("User", username, passwd, jardir + "\\Password.ini");
                 }
                 else
                 {
@@ -65,19 +65,17 @@ namespace KWRunner
         //                            写配置文件方法的4个参数：所在的分区（section）、  键值、     参数值、        配置文件路径
         private static extern long WritePrivateProfileString(string section, string key, string val, string filePath);
 
-        public static void SetValue(string section, string key, string value)
+        public static void SetValue(string section, string key, string value, string path)
         {
             //获得当前路径，当前是在Debug路径下
-            string strPath = Environment.CurrentDirectory + "\\Password.ini";
-            WritePrivateProfileString(section, key, value, strPath);
+            WritePrivateProfileString(section, key, value, path);
         }
 
-        public static string GetValue(string section, string key)
+        public static string GetValue(string section, string key, string path)
         {
             StringBuilder sb = new StringBuilder(255);
-            string strPath = Environment.CurrentDirectory + "\\Password.ini";
             //最好初始缺省值设置为非空，因为如果配置文件不存在，取不到值，程序也不会报错
-            GetPrivateProfileString(section, key, "NaN", sb, 255, strPath);
+            GetPrivateProfileString(section, key, "NaN", sb, 255, path);
             return sb.ToString();
         }
 
@@ -137,7 +135,7 @@ namespace KWRunner
         const uint MEM_RESERVE = 0x00002000;
         const uint PAGE_READWRITE = 4;
 
-        public static bool Hook(Process name, string version)
+        public static bool Hook(Process name, string dllname)
         {
             bool ok1;
             //int ok2;
@@ -145,17 +143,28 @@ namespace KWRunner
             IntPtr baseaddress;
             IntPtr hack;
             IntPtr yan;
-
-            string dllname = "C:\\Plugin\\BDSJSRunner\\" + version + ".dll";
+            Console.WriteLine("Welcome To Use KWRunner DLL Injecter! Powered by Kengwang (github@kengwang)");
             uint dlllength;
             dlllength = (uint)((dllname.Length + 1) * Marshal.SizeOf(typeof(char)));
+            Console.WriteLine("First Let's set the charset");
+            IntPtr lpSetConsoleCP = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetConsoleCP");
+            IntPtr lpSetConsoleOutputCP = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetConsoleOutputCP");
+            if (CreateRemoteThread(name.Handle, IntPtr.Zero, 0, lpSetConsoleCP, (IntPtr)65001, 0, IntPtr.Zero) == IntPtr.Zero)
+            {
+                Console.WriteLine("Charset Error! Code: " + GetLastError().ToString());
+            }
+
+            if (CreateRemoteThread(name.Handle, IntPtr.Zero, 0, lpSetConsoleOutputCP, (IntPtr)65001, 0, IntPtr.Zero) == IntPtr.Zero)
+            {
+                Console.WriteLine("Charset 2 Error! Code: " + GetLastError().ToString());
+            }
 
             //IntPtr procHandle = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, name.Id);
             IntPtr procHandle = name.Handle;
             baseaddress = VirtualAllocEx(procHandle, IntPtr.Zero, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);   //申请内存空间
             if (baseaddress == IntPtr.Zero) //返回0则操作失败，下面都是
             {
-                Console.WriteLine("申请内存空间失败！！");
+                Console.WriteLine("Request for RAM Space Failed! Code: " + GetLastError().ToString());
                 return false;
             }
             UIntPtr bytesWritten;
@@ -163,26 +172,26 @@ namespace KWRunner
             ok1 = WriteProcessMemory(procHandle, baseaddress, Encoding.Default.GetBytes(dllname), dlllength, out bytesWritten); //写内存
             if (!ok1)
             {
-                Console.WriteLine("写内存失败！！" + GetLastError().ToString());
+                Console.WriteLine("Writing RAM Failed! Code: " + GetLastError().ToString());
                 return false;
             }
             hack = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "LoadLibraryA"); //取得loadlibarary在kernek32.dll地址
 
             if (hack == IntPtr.Zero)
             {
-                Console.WriteLine("无法取得函数的入口点！！");
+                Console.WriteLine("Getting LoadLibraryA Failed! Code: " + GetLastError().ToString());
                 return false;
             }
-            yan =CreateRemoteThread(procHandle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
+            yan = CreateRemoteThread(procHandle, IntPtr.Zero, 0, hack, baseaddress, 0, IntPtr.Zero);
             if (yan == IntPtr.Zero)
             {
                 //VirtualFreeEx(name.Handle, baseaddress, 0, 0x00008000);
-                Console.WriteLine("创建远程线程失败！！" + GetLastError().ToString());
+                Console.WriteLine("Creating Remote Thread Failed! Code: " + GetLastError().ToString());
                 return false;
             }
             else
             {
-                Console.WriteLine("已成功注入dll!!");
+                Console.WriteLine("Successfully Inject Dll!");
                 return true;
             }
         }

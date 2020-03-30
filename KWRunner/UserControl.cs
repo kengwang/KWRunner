@@ -13,10 +13,6 @@ namespace UserControl
 {
     public static class Commons
     {
-        static Configuration config;
-        static AppSettingsSection appSetting;
-
-
         public static bool IsAdministrator()
         {
             WindowsIdentity current = WindowsIdentity.GetCurrent();
@@ -26,42 +22,49 @@ namespace UserControl
 
         public static void GiveUserPermission(string filePath, string user)
         {
-            if (Directory.Exists(filePath))
+            try
             {
-                //获取文件夹信息
-                DirectoryInfo dir = new DirectoryInfo(filePath);
-                //获得该文件夹的所有访问权限
-                System.Security.AccessControl.DirectorySecurity dirSecurity = dir.GetAccessControl(AccessControlSections.All);
-                //设定文件ACL继承
-                InheritanceFlags inherits = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-                //添加ereryone用户组的访问权限规则 完全控制权限
-                FileSystemAccessRule everyoneFileSystemAccessRule = new FileSystemAccessRule(user, FileSystemRights.FullControl, inherits, PropagationFlags.None, AccessControlType.Allow);
-                bool isModified = false;
-                dirSecurity.ModifyAccessRule(AccessControlModification.Add, everyoneFileSystemAccessRule, out isModified);
-                //设置访问权限
-                dir.SetAccessControl(dirSecurity);
-
-                foreach (string sub in Directory.GetDirectories(filePath))
+                if (Directory.Exists(filePath))
                 {
-                    GiveUserPermission(sub,user); // 先遍历当前目录的子目录
+                    //获取文件夹信息
+                    DirectoryInfo dir = new DirectoryInfo(filePath);
+                    //获得该文件夹的所有访问权限
+                    System.Security.AccessControl.DirectorySecurity dirSecurity = dir.GetAccessControl(AccessControlSections.All);
+                    //设定文件ACL继承
+                    InheritanceFlags inherits = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+                    //添加ereryone用户组的访问权限规则 完全控制权限
+                    FileSystemAccessRule everyoneFileSystemAccessRule = new FileSystemAccessRule(user, FileSystemRights.FullControl, inherits, PropagationFlags.None, AccessControlType.Allow);
+                    bool isModified = false;
+                    dirSecurity.ModifyAccessRule(AccessControlModification.Add, everyoneFileSystemAccessRule, out isModified);
+                    //设置访问权限
+                    dir.SetAccessControl(dirSecurity);
+
+                    foreach (string sub in Directory.GetDirectories(filePath))
+                    {
+                        GiveUserPermission(sub, user); // 先遍历当前目录的子目录
+                    }
+
+                    // 遍历当前目录的文件
+                    foreach (string f in Directory.GetFiles(filePath))
+                    {
+                        GiveUserPermission(f, user);
+                    }
                 }
-
-                // 遍历当前目录的文件
-                foreach (string f in Directory.GetFiles(filePath))
+                else
                 {
-                    GiveUserPermission(f, user);
+                    //获取文件信息
+                    FileInfo fileInfo = new FileInfo(filePath);
+                    //获得该文件的访问权限
+                    System.Security.AccessControl.FileSecurity fileSecurity = fileInfo.GetAccessControl();
+                    fileSecurity.AddAccessRule(new FileSystemAccessRule(user, FileSystemRights.FullControl, AccessControlType.Allow));
+                    //设置访问权限
+                    fileInfo.SetAccessControl(fileSecurity);
+
                 }
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                //获取文件信息
-                FileInfo fileInfo = new FileInfo(filePath);
-                //获得该文件的访问权限
-                System.Security.AccessControl.FileSecurity fileSecurity = fileInfo.GetAccessControl();
-                fileSecurity.AddAccessRule(new FileSystemAccessRule(user, FileSystemRights.FullControl, AccessControlType.Allow));
-                //设置访问权限
-                fileInfo.SetAccessControl(fileSecurity);
-
+                Console.WriteLine("Path: " + filePath + " Error");
             }
         }
 
