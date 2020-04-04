@@ -146,6 +146,7 @@ namespace KWRunner
             Console.WriteLine("Welcome To Use KWRunner DLL Injecter! Powered by Kengwang (github@kengwang)");
             uint dlllength;
             dlllength = (uint)((dllname.Length + 1) * Marshal.SizeOf(typeof(char)));
+            /*
             Console.WriteLine("First Let's set the charset");
             IntPtr lpSetConsoleCP = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetConsoleCP");
             IntPtr lpSetConsoleOutputCP = GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetConsoleOutputCP");
@@ -158,7 +159,7 @@ namespace KWRunner
             {
                 Console.WriteLine("Charset 2 Error! Code: " + GetLastError().ToString());
             }
-
+            */
             //IntPtr procHandle = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, name.Id);
             IntPtr procHandle = name.Handle;
             baseaddress = VirtualAllocEx(procHandle, IntPtr.Zero, dlllength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);   //申请内存空间

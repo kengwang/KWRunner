@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
@@ -40,7 +41,13 @@ namespace KWRunner
                 string world = "NaN";
                 string player = "NaN";
                 string dll = "NaN";
+                string path = "NaN";
+                string param = "NaN";
+                string memory = "NaN";
+                bool haveparam = false;
+                string type = "NaN";//0-BDS 1-NK 2-PM
                 bool nodll = false;
+                bool pause = false;
                 bool injecter = false;
                 for (int i = 0; i < argc; i++)
                 {
@@ -53,56 +60,90 @@ namespace KWRunner
                     if (args[i] == "--player") player = args[++i];
                     if (args[i] == "--nodll") nodll = true;
                     if (args[i] == "--dll") dll = args[++i];
+                    if (args[i] == "--type") type = args[++i];
                     if (args[i] == "--injecter") injecter = true;
+                    if (args[i] == "--pause") pause = true;
+                    if (args[i] == "--memory") memory = args[++i];
                 }
-                if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN" || port == "NaN" || world == "NaN" || player == "NaN")
+                if (user == "NaN" || jarpath == "NaN" || version == "NaN" || serverdir == "NaN" || port == "NaN" || world == "NaN" || player == "NaN" || type == "NaN")
                 {
-                    Console.WriteLine("Args not Completed!");
+                    OutputMessage("Args not Completed!");
                     Environment.Exit(-4);
                 }
                 //serverdir += "\\";
-                Console.WriteLine("Welcome To Use KWRunner V1.0.0! Powered by Kengwang (github@kengwang)");
-                Console.WriteLine("Checking For User Exist");
+                OutputMessage("Welcome To Use KWRunner V1.1.0! Powered by Kengwang (github@kengwang)");
+                if (pause) { OutputMessage("Today is not good for playing games"); Environment.Exit(-1); }
+                OutputMessage("Checking For User Exist");
                 Hooker.IsUserExist(user, jarpath);
                 string passwd = Hooker.GetValue("User", user, jarpath + "\\Password.ini");
-                Console.WriteLine("Checking if first start");
-                if (!File.Exists(serverdir + "\\DONOTMODIFY"))
-                {
-                    //Load serverproperties
-                    Console.WriteLine("Loading Default Server Properties");
-                    File.Copy(jarpath + "\\BDS\\def.properties", serverdir + "server.properties", true);
-                    File.WriteAllText(serverdir + "\\DONOTMODIFY", "0");
-                }
+                if (type.ToLower() == "bds")
+                {//BDS - FLOW                    
+                    OutputMessage("Checking if BDS Opened");
+                    Process[] p = Process.GetProcesses();
+                    foreach (Process pro in p)
+                    {
+                        if (pro.ProcessName != "bedrock_server.exe") continue;
+                        if (GetProcessUserName(pro.Id) == user)
+                        {
+                            OutputMessage("BDS Already Started, Sending Kill Command");
+                            pro.Kill();
+                        }
+                    }
 
-                if (File.ReadAllText(serverdir + "\\DONOTMODIFY") != version)
-                {
-                    Console.WriteLine("Copying Required File, it may take few moument");
-                    if (!CopyDirectory(jarpath + "\\BDS\\" + version + "\\", serverdir + "\\", true))
+                    OutputMessage("Checking if first start");
+                    if (!File.Exists(serverdir + "\\DONOTMODIFY"))
                     {
-                        Console.WriteLine("Copying Directory Failed, Please Contact Sales");
-                        Environment.Exit(-3);
+                        //Load serverproperties
+                        OutputMessage("Loading Default Server Properties");
+                        File.Copy(jarpath + "\\BDS\\def.properties", serverdir + "server.properties", true);
+                        File.WriteAllText(serverdir + "\\DONOTMODIFY", "0");
                     }
+
+                    if (File.ReadAllText(serverdir + "\\DONOTMODIFY") != version)
+                    {
+                        OutputMessage("Copying Required File, it may take few moument");
+                        if (!CopyDirectory(jarpath + "\\BDS\\" + version + "\\", serverdir + "\\", true))
+                        {
+                            OutputMessage("Copying Directory Failed, Please Contact Sales");
+                            Environment.Exit(-3);
+                        }
+                        else
+                        {
+                            File.WriteAllText(serverdir + "\\DONOTMODIFY", version);
+                            OutputMessage("Give ServerDir Control Permission to the User, it may take few moument");
+                            UserControl.Commons.GiveUserPermission(serverdir, user);
+                            OutputMessage("Permission All Given");
+                        }
+                    }
+                    if (!nodll)
+                    {
+                        OutputMessage("Copying Plugin DLL");
+                        if (File.Exists(dll))
+                        {
+                            File.Copy(dll, serverdir + "\\Plugin.dll", true);
+                        }
+                        else
+                        {
+                            OutputMessage("Cannot Find DLL, Please Contact Sale. It will run by Non-dll mode!");
+                        }
+                    }
+                    if (!injecter) path = serverdir + "bedrock_server.exe";
                     else
                     {
-                        File.WriteAllText(serverdir + "\\DONOTMODIFY", version);
-                        Console.WriteLine("Give ServerDir Control Permission to the User, it may take few moument");
-                        UserControl.Commons.GiveUserPermission(serverdir, user);
-                        Console.WriteLine("Permission All Given");
+                        OutputMessage("Using Third Party Injecter!");
+                        path = jarpath + "\\MCDllInject.exe";
+                        param = serverdir + "bedrock_server.exe" + " " + serverdir;
+                        haveparam = true;
                     }
                 }
-                if (!nodll)
-                {
-                    Console.WriteLine("Copying Plugin DLL");
-                    if (File.Exists(dll))
-                    {
-                        File.Copy(dll, serverdir + "\\Plugin.dll", true);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Cannot Find DLL, Please Contact Sale. It will run by Non-dll mode!");
-                    }
+                else if (type.ToLower() == "nk")
+                {//NK FLOW
+                    if (memory == "NaN") { OutputMessage("Args not complete for nukkit"); Environment.Exit(-1); }
+                    path = "C:\\Program Files\\Java\\jre1.8.0_231\\bin\\java.exe";
+                    param = "-Xmx" + memory + "M -Xms" + memory + "M -XX:MaxPermSize=128M -Djline.terminal=jline.UnsupportedTerminal -jar \"" + jarpath + "\\Nukkit\\" + version + ".jar" + "\" nogui";
+                    haveparam = true;
                 }
-                Console.WriteLine("Configuring Server Properties");
+                OutputMessage("Configuring Server Properties");
                 string[] lines = File.ReadAllLines(serverdir + "\\server.properties");
                 int l = lines.Length;
                 bool portset = false;
@@ -118,28 +159,23 @@ namespace KWRunner
                 if (!portset)
                 {
                     lines = lines.Append("server-port=" + port).ToList().ToArray();
-                    //Console.WriteLine("Port to " + port);
+                    //OutputMessage("Port to " + port);
                 }
                 if (!port6set)
                 {
                     lines = lines.Append("server-portv6=" + (int.Parse(port) + 1).ToString()).ToList().ToArray();
-                    //Console.WriteLine("v6 to " + int.Parse(port) + 1);
+                    //OutputMessage("v6 to " + int.Parse(port) + 1);
                 }
                 File.WriteAllLines(serverdir + "server.properties", lines);
 
-                Console.WriteLine("Try to Start BDS at " + serverdir);
+                OutputMessage("Try to Start SERVER");
                 Process process = new System.Diagnostics.Process();
-                if (!injecter) process.StartInfo.FileName = serverdir + "bedrock_server.exe";
-                else
-                {
-                    Console.WriteLine("Using Third Party Injecter!");
-                    process.StartInfo.FileName = jarpath + "\\MCDllInject.exe";
-                    process.StartInfo.Arguments = serverdir + "bedrock_server.exe" + " " + serverdir;
-                }
-
+                process.StartInfo.FileName = path;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = serverdir;
+                if (haveparam) process.StartInfo.Arguments = param;
+                process.StartInfo.ErrorDialog = false;
+                process.StartInfo.WorkingDirectory = serverdir;                
                 process.StartInfo.RedirectStandardInput = true;  // 重定向输入
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
@@ -155,10 +191,18 @@ namespace KWRunner
                 }
                 process.StartInfo.Password = password; //指定明码，必须是安全字符串
                 _process = process;
-                process.Start();
+                try
+                {
+                    process.Start();
+                }
+                catch (System.ComponentModel.Win32Exception e)
+                {
+                    OutputMessage(e.Message);
+                    OutputMessage(path);
+                }
                 if (!nodll && !injecter)
                 {
-                    Console.WriteLine("Using Original Hooker");
+                    OutputMessage("Using Original Hooker");
                     Hooker.Hook(process, serverdir + "\\Plugin.dll");
                 }
                 process.BeginOutputReadLine();
@@ -170,15 +214,15 @@ namespace KWRunner
                     if (input == "stop")
                     {
                         process.StandardInput.WriteLine("stop");
-                        
+
                         if (forcestop)
                         {
                             process.Kill();
-                            Console.WriteLine("Force Killed BDS Server");
+                            OutputMessage("Force Killed BDS Server");
                         }
                         else
                         {
-                            Console.WriteLine("Send stop Again to force stop");
+                            OutputMessage("Send stop Again to force stop");
                             forcestop = true;
                         }
                     }
@@ -187,30 +231,65 @@ namespace KWRunner
                         process.StandardInput.WriteLine(input);
                     }
                 }
-                ///*             Uncomment in  Release Version
+                ///*             Comment in  Release Version
             }
             catch (Exception e)
             {
-                Console.WriteLine("KWRunner Looks Like A Crash");
+                OutputMessage("KWRunner Looks Like A Crash");
+                if (true)
+                {
+                    OutputMessage(e.StackTrace);
+                }
             }
             //*/
         }
 
+        private static void OutputMessage(string str)
+        {
+            Console.WriteLine(str);
+        }
+
+        private static string GetProcessUserName(int pID)
+        {
+
+            string text1 = null;
+
+            SelectQuery query1 = new SelectQuery("Select * from Win32_Process where processID=" + pID);
+            ManagementObjectSearcher searcher1 = new ManagementObjectSearcher(query1);
+            try
+            {
+                foreach (ManagementObject disk in searcher1.Get())
+                {
+                    ManagementBaseObject inPar = null;
+                    ManagementBaseObject outPar = null;
+                    inPar = disk.GetMethodParameters("GetOwner");
+                    outPar = disk.InvokeMethod("GetOwner", inPar, null);
+                    text1 = outPar["User"].ToString();
+                }
+            }
+            catch (Exception e)
+            {
+                text1 = "SYSTEM";
+            }
+
+            return text1;
+        }
         private static void Process_Exit(object sender, EventArgs e)
         {
-            Console.WriteLine("BDS Exit with code " + _process.ExitCode);
+            OutputMessage("BDS Exit with code " + _process.ExitCode);
             Environment.Exit(_process.ExitCode);
         }
 
         private static void processOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            if (e == null) return;
             if (e.Data.Contains("rhymc"))
             {
-                Console.WriteLine("BDSJSRunner Successfully Loaded!");
+                OutputMessage("BDSJSRunner Successfully Loaded!");
             }
             else if (e.Data.Contains("can't start server"))
             {
-                Console.WriteLine("Cannot start BDS Server!");
+                OutputMessage("Cannot start BDS Server!");
                 _process.Kill();
                 //由于Precess_Exit会处理,就不管啦!
             }
@@ -222,7 +301,7 @@ namespace KWRunner
 
         private static void processErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            //Console.WriteLine("[ERROR] "+e.Data);
+            //OutputMessage("[ERROR] "+e.Data);
         }
 
         private static bool CopyDirectory(string SourcePath, string DestinationPath, bool overwriteexisting)

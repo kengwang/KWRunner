@@ -2,7 +2,7 @@
 <!DOCTYPE dotfuscatorMap SYSTEM "http://www.preemptive.com/dotfuscator/dtd/dotfuscatorMap_v1.2.dtd">
 <dotfuscatorMap version="1.1">
     <header>
-        <timestamp>2020-03-30T22:55:02</timestamp>
+        <timestamp>2020-04-04T10:32:23</timestamp>
         <product version="4.9.6005.29054" user="firefly " serial="124576-PRO-AC6AB7C5-7A50E312-F0BBEBCC-829D98D7">Dotfuscator Professional Edition</product>
     </header>
     <mapping>
@@ -146,8 +146,18 @@
                         <newname>ᜀ</newname>
                     </method>
                     <method>
+                        <signature>string(int32)</signature>
+                        <name>GetProcessUserName</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
                         <signature>void(string[])</signature>
                         <name>Main</name>
+                        <newname>ᜀ</newname>
+                    </method>
+                    <method>
+                        <signature>void(string)</signature>
+                        <name>OutputMessage</name>
                         <newname>ᜀ</newname>
                     </method>
                     <method>
@@ -268,7 +278,7 @@
         </statisticline>
         <statisticline>
             <description>Total Methods</description>
-            <statistic>30</statistic>
+            <statistic>32</statistic>
         </statisticline>
         <statisticline>
             <description>Total Fields</description>
@@ -289,8 +299,8 @@
         </statisticline>
         <statisticline>
             <description>Total Methods Renamed</description>
-            <statistic>17</statistic>
-            <statistic>56.67%</statistic>
+            <statistic>19</statistic>
+            <statistic>59.38%</statistic>
         </statisticline>
         <statisticline>
             <description>Total Fields Renamed</description>
@@ -309,13 +319,13 @@
         </statisticline>
         <statisticline>
             <description>Methods Renamed to 'ᜀ'</description>
-            <statistic>16</statistic>
-            <statistic>53.33%</statistic>
+            <statistic>18</statistic>
+            <statistic>56.25%</statistic>
         </statisticline>
         <statisticline>
             <description>Methods Renamed to 'ᜁ'</description>
             <statistic>1</statistic>
-            <statistic>3.33%</statistic>
+            <statistic>3.13%</statistic>
         </statisticline>
     </statistics>
 </dotfuscatorMap>
