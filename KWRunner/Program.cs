@@ -45,6 +45,7 @@ namespace KWRunner
                 string param = "NaN";
                 string memory = "NaN";
                 bool haveparam = false;
+                bool highquality = false;
                 string type = "NaN";//0-BDS 1-NK 2-PM
                 bool nodll = false;
                 bool pause = false;
@@ -60,6 +61,7 @@ namespace KWRunner
                     if (args[i] == "--player") player = args[++i];
                     if (args[i] == "--nodll") nodll = true;
                     if (args[i] == "--dll") dll = args[++i];
+                    if (args[i] == "--hq") highquality = true;
                     if (args[i] == "--type") type = args[++i];
                     if (args[i] == "--injecter") injecter = true;
                     if (args[i] == "--pause") pause = true;
@@ -82,11 +84,13 @@ namespace KWRunner
                     Process[] p = Process.GetProcesses();
                     foreach (Process pro in p)
                     {
-                        if (pro.ProcessName != "bedrock_server.exe") continue;
-                        if (GetProcessUserName(pro.Id) == user)
+                        if (pro.ProcessName=="bedrock_server")
                         {
-                            OutputMessage("BDS Already Started, Sending Kill Command");
-                            pro.Kill();
+                            if (GetProcessUserName(pro.Id) == user)
+                            {
+                                OutputMessage("BDS Already Started, Sending Kill Command");
+                                pro.Kill();
+                            }
                         }
                     }
 
@@ -124,7 +128,7 @@ namespace KWRunner
                         }
                         else
                         {
-                            OutputMessage("Cannot Find DLL, Please Contact Sale. It will run by Non-dll mode!");
+                            OutputMessage("Cannot Find DLL, Please Contact Sale.");
                         }
                     }
                     if (!injecter) path = serverdir + "bedrock_server.exe";
@@ -155,6 +159,13 @@ namespace KWRunner
                     if (lines[i].Contains("server-portv6")) if (!port6set) { lines[i] = "server-portv6=" + int.Parse(port) + 1; port6set = true; } else { lines[i] = ""; }
                     if (lines[i].Contains("level-name")) lines[i] = "level-name=" + world;
                     if (lines[i].Contains("max-players")) lines[i] = "max-players=" + player;
+                    if (!highquality)
+                    {
+                        if (lines[i].Contains("view-distance")) lines[i] = "view-distance=5";
+                        if (lines[i].Contains("tick-distance")) lines[i] = "tick-distance=5";
+                        if (lines[i].Contains("tick-distance")) lines[i] = "tick-distance=4";
+                        if (lines[i].Contains("max-threads")) lines[i] = "max-threads=4";
+                    }
                 }
                 if (!portset)
                 {
@@ -175,7 +186,7 @@ namespace KWRunner
                 process.StartInfo.CreateNoWindow = true;
                 if (haveparam) process.StartInfo.Arguments = param;
                 process.StartInfo.ErrorDialog = false;
-                process.StartInfo.WorkingDirectory = serverdir;                
+                process.StartInfo.WorkingDirectory = serverdir;
                 process.StartInfo.RedirectStandardInput = true;  // 重定向输入
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
@@ -183,7 +194,7 @@ namespace KWRunner
                 process.EnableRaisingEvents = true;                      // 启用Exited事件
                 process.Exited += new EventHandler(Process_Exit);   // 注册进程结束事件
                 process.OutputDataReceived += new DataReceivedEventHandler(processOutputDataReceived);
-                process.OutputDataReceived += new DataReceivedEventHandler(processErrorDataReceived);
+                process.ErrorDataReceived += new DataReceivedEventHandler(processErrorDataReceived);
                 SecureString password = new SecureString();   //SecureString，安全字符，必须是char类型
                 foreach (char c in passwd.ToCharArray())
                 {
@@ -217,7 +228,8 @@ namespace KWRunner
 
                         if (forcestop)
                         {
-                            process.Kill();
+                            if (process != null)
+                                process.Kill();
                             OutputMessage("Force Killed BDS Server");
                         }
                         else
@@ -290,7 +302,8 @@ namespace KWRunner
             else if (e.Data.Contains("can't start server"))
             {
                 OutputMessage("Cannot start BDS Server!");
-                _process.Kill();
+                if (_process != null)
+                    _process.Kill();
                 //由于Precess_Exit会处理,就不管啦!
             }
             else
@@ -301,7 +314,7 @@ namespace KWRunner
 
         private static void processErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            //OutputMessage("[ERROR] "+e.Data);
+            OutputMessage(e.Data);
         }
 
         private static bool CopyDirectory(string SourcePath, string DestinationPath, bool overwriteexisting)
